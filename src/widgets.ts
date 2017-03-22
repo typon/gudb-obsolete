@@ -26,7 +26,7 @@ export class Widgets {
     constructor(gdbObj) {
         this.gdbObj = gdbObj
         this._screen = blessed.screen({
-            debug: true,
+            debug: false,
             log: './logf',
             autoPadding: true,
             fullUnicode: true,
