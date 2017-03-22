@@ -1,0 +1,30 @@
+{
+  "name": "gudb",
+  "version": "1.0.0",
+  "description": "Pretty gdb UI.",
+  "main": "gdb.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "author": "Hassan Farooq",
+  "license": "MIT",
+  "dependencies": {
+    "@types/baconjs": "^0.7.31",
+    "@types/blessed": "^0.1.4",
+    "@types/lodash": "^4.14.53",
+    "@types/winston": "^2.2.0",
+    "autocomplete": "0.0.1",
+    "babel-polyfill": "^6.23.0",
+    "baconjs": "^0.7.89",
+    "blessed": "^0.1.81",
+    "child-process": "^1.0.2",
+    "editor-widget": "^1.1.1",
+    "gdb-js": "^1.2.0",
+    "lodash": "^4.17.4",
+    "pty": "0.0.0",
+    "reflec-ts": "^0.3.7",
+    "regenerator": "^0.9.7",
+    "serialport": "^4.0.7",
+    "winston": "^2.3.1"
+  }
+}
