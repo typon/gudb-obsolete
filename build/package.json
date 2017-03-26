@@ -1,0 +1,27 @@
+{
+  "name": "gudb",
+  "version": "1.0.0",
+  "description": "Pretty gdb UI.",
+  "main": "main.js",
+  "author": "Hassan Farooq",
+  "license": "GPL2",
+  "dependencies": {
+    "autocomplete": "0.0.1",
+    "babel-polyfill": "^6.23.0",
+    "baconjs": "^0.7.89",
+    "blessed": "^0.1.81",
+    "child-process": "^1.0.2",
+    "commander": "^2.9.0",
+    "editor-widget": "github:typon/editor-widget",
+    "gdb-js": "github:typon/gdb-js",
+    "lodash": "^4.17.4",
+    "pty": "0.0.0",
+    "reflec-ts": "^0.3.7",
+    "regenerator": "^0.9.7",
+    "serialport": "^4.0.7",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "gdb-js": "github:typon/gdb-js"
+  }
+}

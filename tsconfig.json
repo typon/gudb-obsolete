@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "outDir": "build",
+        "removeComments": true,
+        "module": "commonjs",
+        "lib": ["ES2015"],
+        "typeRoots": [
+            "./src/node_modules/@types"
+        ],
+        "types": [],
+        "target": "es6"
+    },
+    "include": [
+        "src/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}
