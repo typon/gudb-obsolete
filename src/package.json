@@ -19,6 +19,7 @@
     "baconjs": "^0.7.89",
     "blessed": "^0.1.81",
     "child-process": "^1.0.2",
+    "commander": "^2.9.0",
     "editor-widget": "https://github.com/typon/editor-widget/tarball/master",
     "gdb-js": "github:typon/gdb-js",
     "lodash": "^4.17.4",

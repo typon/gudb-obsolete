@@ -68,7 +68,9 @@ export class Streams extends utils.HasCallbacks {
     p_ibox_nonempty_submit: Bacon.Property<any, any>; 
     s_user_cmd_result_quit: Bacon.EventStream<any,any>;
 
-    
+    p_varbox_search: Bacon.Property<any,any>;
+
+   
 
     gdbObj: GDB;
     widgets: Widgets;
@@ -97,6 +99,7 @@ export class Streams extends utils.HasCallbacks {
         // first one into the stream.
         this.s_screen_keydown = new Bacon.Bus()
         this.widgets._screen.on('keypress', _.partial(key_callback,this.s_screen_keydown))
+        this.s_screen_keydown.onValue(t=> lg.info('KEY: ' + t))
 
         this.s_ibox_submit = Bacon.fromEvent(this.widgets._inputBox, 'submit')
 
@@ -174,6 +177,7 @@ export class Streams extends utils.HasCallbacks {
         this.handle_variables()
         this.handle_variable_search()
         this.handle_menuBar()
+        this.handle_helpMSG()
     }
     handle_resizing(){
 
@@ -570,8 +574,8 @@ export class Streams extends utils.HasCallbacks {
 
         let localsStrs: string[] = locals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
         let globalsStrs: string[] = globals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
-        localsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}Locals`, localsStrs)
-        globalsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}Globals`, globalsStrs)
+        localsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Locals`, localsStrs)
+        globalsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Globals`, globalsStrs)
         const allStrs = _.concat(localsStrs, globalsStrs)
         return allStrs
 
@@ -593,7 +597,7 @@ export class Streams extends utils.HasCallbacks {
         // Create property that holds the latest search string.
         // It gets reset every time the user starts a new search
         // or presses escape or presses enter.
-        let s_varbox_search = Bacon.update(
+        this.p_varbox_search = Bacon.update(
           ['', false], // Initial
           [s_varbox_reset], function([srch, valid], reset) {
               // Reset search valid
@@ -609,7 +613,7 @@ export class Streams extends utils.HasCallbacks {
         ).filter(([srch, valid]) => valid == true)
         .map(([srch, valid]) => {return srch})
 
-        s_start_varsearch.toProperty().sampledBy(s_varbox_search, (func: Function, srch: string) => {
+        s_start_varsearch.toProperty().sampledBy(this.p_varbox_search, (func: Function, srch: string) => {
             func(srch)
             return true
         }).onValue(() => {})
@@ -620,12 +624,18 @@ export class Streams extends utils.HasCallbacks {
         let s_program_status = Bacon.mergeAll(this.s_gdb_stopped.map('Stopped'),
                                               this.s_gdb_running.map('Running'))
                                 .toProperty().startWith('Not started')
-        
-        s_program_status.onValue(statuz => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz)))
-        //this.widgets._menuBar.setContent('\n{center}asdasdjddsadsakj jksad jksa dsajk adsjk dasjksad kjdsakjd aksj kjadskjd{/}\n')
-        //this.widgets._menuBar.setContent('hello {right}{#ff0000-fg}{#00ff00-bg}world{/}')
-        //this.widgets._menuStatus.setContent('{bold}world{/}');
-        //this.widgets._menuBar.setContent('{right}Even different {black-fg}content{/black-fg}.{/right}', false, false);
-        //s_program_status.onValue(statuz => this.widgets._menuBar.setContent('\n{center}asdasdjddsadsakj jksad jksa dsajk adsjk dasjksad kjdsakjd aksj kjadskjd{/}\n'))
+        let s_menubar_updates = Bacon.combineAsArray(s_program_status, this.p_varbox_search).startWith(['Not started',''])
+                                .onValue(([statuz, srch]) => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz, srch)))
+        //s_menubar_updates.onValue(statuz => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz)))
     }
+    handle_helpMSG() {
+        let s_screen_key_qm = this.s_screen_keydown.filter(key => key === '?')
+        this.widgets._helpMessage.hidden = true;
+        s_screen_key_qm.onValue(() => {
+            this.widgets._helpMessage.hidden = false;
+            this.widgets._helpMessage.display(cts.helpMessageProps.text, 0, ()=>{})
+        })
+
+    }
+
 }

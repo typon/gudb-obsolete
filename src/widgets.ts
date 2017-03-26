@@ -24,6 +24,7 @@ export class Widgets {
     _hbox_inbox_divider;
     _historyBox;
     _errorMessage;
+    _helpMessage;
     _hboxState;
     _menuStatusTemplate;
     constructor() {
@@ -41,75 +42,49 @@ export class Widgets {
             width: '100%',
             height: '100%',
             style: cts.screenProps.style,
-          /*
-          style: {
-            bg: 'red',
-            border: {
-              fg: 'blue'
-            }
-          }
-          */
         })
         this._menuBar = blessed.box({
             parent: this._layout,
             top: 0,
             left: 0,
-            //top:cts.menuBarProps.top,
-            //left: cts.menuBarProps.left,
             width: cts.menuBarProps.width,
             height: cts.menuBarProps.height,
-            //content: this._menuBarTemplate('Not started'),
-            //content: '{center}asd{/center}{bold}ree{/}{/} {center} AA{/center}',
             style: cts.menuBarProps.style
         })
         this._menuText = blessed.text({
             parent: this._menuBar,
             tags: true,
             left: cts.menuTextProps.left,
-            //top:cts.menuBarProps.top,
-            //left: cts.menuBarProps.left,
-            //height: cts.menuBarProps.height,
-            //content: this._menuBarTemplate('Not started'),
-            //content: '{center}asd{/center}{bold}ree{/}{/} {center} AA{/center}',
             content: cts.menuTextProps.content,
             style: cts.menuTextProps.style
         })
 
-        this._menuStatusTemplate = statuz => `{bold}Status: ${statuz}{/}`
+        this._menuStatusTemplate = (statuz, search) => `help: ? | Search: ${search} | {bold}Status: ${statuz}{/}`
         this._menuStatus = blessed.text({
             parent: this._menuBar,
             tags: true,
             right: cts.menuStatusProps.right,
-            //content: '{bold}asd{/}',
-            //top:cts.menuBarProps.top,
-            //left: cts.menuBarProps.left,
-            //width: cts.menuBarProps.width,
-            //height: cts.menuBarProps.height,
             content: this._menuStatusTemplate('Not started'),
             style: cts.menuStatusProps.style
         })
 
-        /*
-        this._menuBar.add("REE", () => {})
-        this._menuBar.add("NUTS", () => {})
-        //*/
-
         this._editor = new Editor({
             // normal blessed widget, use like you would any other blessed element
             parent: this._layout,
-            //top: cts.editorProps.top,
-            //left: cts.editorProps.left,
+            style: cts.editorProps.style,
             width: cts.editorProps.width,
             height: cts.editorProps.height,
             label: 'Source',
             border: {
                 type: 'line'
             },
-            style: cts.editorProps.style,
             tags: true,
 
         });
         this._editor.options.style['markedRow'] = `{${cts.colorScheme.breakPointLine}}`
+        this._editor.buffer.style = cts.editorProps.style.buffer
+        this._editor.gutter.style = cts.editorProps.style.gutter
+        this._editor.gutter.options.style.currentLine = cts.colorScheme.editor.gutter.currentLine
         this._editor.readOnly(true);
 
         this._varBox = blessed.List({
@@ -117,8 +92,6 @@ export class Widgets {
             label: 'Variables',
             parent: this._layout,
             scrollable: true,
-            // Possibly support:
-            // align: 'center',
             style: cts.varBoxProps.style,
             alwaysScroll: true,
             scrollbar: {
@@ -130,8 +103,6 @@ export class Widgets {
             },
             height: cts.varBoxProps.height,
             width: cts.varBoxProps.width,
-            //left: cts.varBoxProps.left,
-            //top: cts.varBoxProps.top,
             vi: true,
             tags: true,
             keys: true,
@@ -150,9 +121,6 @@ export class Widgets {
             height: cts.CommandPanelProps.height,
             width: cts.CommandPanelProps.width,
         
-            //top: cts.CommandPanelProps.top,
-            //left: '0%',
-        
             alwaysScroll: true,
             scrollbar: {
                 ch: ' ',
@@ -160,15 +128,11 @@ export class Widgets {
             }
         });
         
-        //let historyBoxData = 
         this._historyBox = blessed.log({
             name: 'historyBox', 
             parent: this._container,
             scrollable: true,
-            // Possibly support:
-            // align: 'center',
             style: cts.CommandPanelProps.historyBoxProps.style,
-            //alwaysScroll: true,
             scrollbar: {
                 ch: ' ',
                 inverse: true
@@ -190,8 +154,6 @@ export class Widgets {
             label: 'Program output',
             parent: this._layout,
             scrollable: true,
-            // Possibly support:
-            // align: 'center',
             style: cts.outputBoxProps.style,
             alwaysScroll: true,
             scrollbar: {
@@ -203,8 +165,6 @@ export class Widgets {
             },
             height: cts.outputBoxProps.height,
             width: cts.outputBoxProps.width,
-            //left: cts.outputBoxProps.left,
-            //top: cts.outputBoxProps.top,
             vi: true,
             keys: true,
         });
@@ -212,8 +172,6 @@ export class Widgets {
         this._inputBox = blessed.Textbox({
             name: 'inputBox', 
             parent: this._container,
-            // Possibly support:
-            // align: 'center',
             style: cts.CommandPanelProps.inputBoxProps.style,
             inputOnFocus: false,
             bottom: 0,
@@ -231,6 +189,21 @@ export class Widgets {
             top: 'center',
             left: 'center',
             label: ' {red-fg}gdb Output{/red-fg} ',
+            tags: true,
+            keys: true,
+            hidden: true,
+            alwaysScroll: true,
+            vi: true
+        });
+        this._helpMessage = blessed.message({
+            parent: this._screen,
+            style: cts.helpMessageProps.style,
+            border: 'line',
+            height: 'shrink',
+            width: 'half',
+            top: 'center',
+            left: 'center',
+            label: 'Help',
             tags: true,
             keys: true,
             hidden: true,

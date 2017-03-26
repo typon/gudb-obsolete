@@ -1,153 +1,4 @@
 import * as _ from "lodash";
-/*
-export let multiCmds = {'define': '', 'commands':'-break-commands'}
-export enum CMDState {Final, Int}
-
-const opts {
-    solarized_dark: {
-        base03: '#002b36', // base03: '#002b36',
-        base02: '#073642', // base02: '#073642',
-        base0:  '#839496', // base0:  '#839496',
-        base1:  '#93a1a1', // base1:  '#93a1a1',
-        base01: '#586e75', // base01: '#586e75',
-        focusedBorder: 'red',
-        /*
-        commandIntColor = 'white-fg'
-        commandTextColor = 'blue-fg'
-        resultTextColor = 'green-fg'
-        resultErrorColor = 'red-fg'
-        breakPointLineColor = '#d7afaf-bg'
-        varNameColor = 'blue-fg'
-    },
-    colorScheme: 'solarized_dark',
-
-    editorProps: {
-        label: 'Source',
-        height: '60%',
-        width: '70%',
-        left: '0%',
-        top: '0%',
-        style: {
-                focus: {
-                    border: {
-                        fg: colors.focusedBorder
-                    }
-                },
-            }
-    },
-    varBoxProps: {
-        height: '60%',
-        width: '30%',
-        left: '70%',
-        top: '0%',
-        style: {
-                fg: colorScheme.base0,
-                bg: colorScheme.base03,
-                focus: {
-                    bg: colorScheme.base02,
-                    fg: colorScheme.base1,
-                    border: {
-                        fg: colors.focusedBorder
-                    },
-                },
-                scrollbar: {
-                      bg: colorScheme.base1,
-                },
-
-            }
-
-    }
-    export const outputBoxProps = {
-        height: '40%',
-        width: '30%',
-        left: '70%',
-        top: '60%',
-        style: {
-                fg: colorScheme.base0,
-                bg: colorScheme.base03,
-                focus: {
-                    bg: colorScheme.base02,
-                    fg: colorScheme.base1,
-                    border: {
-                        fg: colors.focusedBorder
-                    },
-                },
-                scrollbar: {
-                      bg: colorScheme.base1,
-                },
-            }
-
-    }
-
-
-    export const CommandPanelProps = {
-        height: '40%',
-        width: '70%',
-        top: '60%',
-        style: {
-            border: {
-                fg: 'white'
-            }
-        },
-
-        screenProps: {
-            style: {
-                fg: colorScheme.base0,
-                bg: colorScheme.base03,
-            }
-        },
-        outputBoxProps: {
-            style: {
-                fg: colorScheme.base0,
-                bg: colorScheme.base03,
-                focus: {
-                    bg: colorScheme.base02,
-                    fg: colorScheme.base1,
-                },
-                scrollbar: {
-                      bg: colorScheme.base1,
-                },
-            }
-
-        },
-
-        historyBoxProps: {
-            style: {
-                fg: colorScheme.base0,
-                bg: colorScheme.base03,
-                focus: {
-                    bg: colorScheme.base02,
-                    fg: colorScheme.base1,
-                },
-                scrollbar: {
-                      bg: colorScheme.base1,
-                },
-            }
-
-        },
-        inputBoxProps: {
-            height: 3,
-            style: {
-                bg: colorScheme.base03,
-                fg: colorScheme.base0,
-                focus: {
-                    bg: colorScheme.base02,
-                    fg: colorScheme.base1,
-                },
-            },
-        }
-    }
-    export enum HistoryBoxState {
-        Idle,
-        ScrollingAll,
-        ScrollingCustomText,
-    }
-
-    export const prefix: string = '>>>';
-
-}
-*/
-
 export const solarized = {
     // Actual hex colors
     base03: '#002b36',
@@ -194,6 +45,7 @@ export const colorScheme = {
     breakPointLine: solarized.orange + '-bg',
     varName: solarized.red + '-fg',
     varHeader: solarized.yellow + '-fg',
+    varHeaderbg: solarized.base2 + '-bg',
 
     screen: {
         bg: solarized.base3,
@@ -229,6 +81,18 @@ export const colorScheme = {
         fg: solarized.red,
         bg: solarized.base3,
     },
+    editor: {
+        buffer: {
+            bg: solarized.base3,
+            fg: solarized.base00,
+        },
+        gutter: {
+            bg: solarized.base2,
+            fg: solarized.base01,
+            currentLine: `{${solarized.blue}-bg}{${solarized.base1}-fg}{bold}`,
+        },
+    },
+
     varBox: {
         text: {
             bg: solarized.base3,
@@ -265,6 +129,22 @@ export const colorScheme = {
         bg: solarized.base3,
         fg: solarized.base00,
     },
+    helpMessage: {
+        text: {
+            bg: solarized.base2,
+            fg: solarized.base00,
+        },
+        border: {
+            bg: solarized.base01,
+            fg: solarized.base1,
+        },
+        label: {
+            bg: solarized.base01,
+            fg: solarized.base3,
+        },
+        bg: solarized.base2,
+        fg: solarized.base00,
+    }
 
 }
 
@@ -320,8 +200,14 @@ export const editorProps = {
     //left: '0%',
     //top: '5%',
     style: {
-            //fg: colorScheme.base0,
-            //bg: colorScheme.base03,
+            buffer: {
+                fg: colorScheme.editor.buffer.fg,
+                bg: colorScheme.editor.buffer.bg,
+            },
+            gutter: {
+                fg: colorScheme.editor.gutter.fg,
+                bg: colorScheme.editor.gutter.bg,
+            },
             focus: {
                 border: {
                     fg: colorScheme.focusedBorder.fg,
@@ -380,7 +266,7 @@ export const varBoxProps = {
 }
 export const outputBoxProps = {
     height: undefined,
-    width: '25%',
+    width: '50%',
     left: '70%',
     top: '60%',
     style: {
@@ -411,7 +297,7 @@ export const outputBoxProps = {
 
 export const CommandPanelProps = {
     height: undefined,
-    width: '75%',
+    width: '50%',
     top: '60%',
     style: {
         fg: colorScheme.historyBox.text.fg,
@@ -468,6 +354,49 @@ export const CommandPanelProps = {
         },
     }
 }
+export const helpMessageProps = {
+    text: 
+`{bold}Welcome to gudb!{/}
+
+{underline}Usage{/}
+    {bold}?{/}       Bring up help message
+    {bold}C-q{/}     Quit
+
+    {bold}C-x{/}     Focus on gdb command panel
+    {bold}C-s{/}     Focus on source panel          
+    {bold}C-v{/}     Focus on variables panel       
+    {bold}C-o{/}     Focus on program output panel  
+    {bold}C-l{/}     Focus on history log           
+
+When focused on source panel, use the following buttons for convenient gdb commands:
+    {bold}n{/}       next
+    {bold}s{/}       step
+    {bold}r{/}       run
+    {bold}b{/}       create/delete breakpoint at current line
+
+When focused on variable window:
+    {bold}/{/}       start searching for variable name
+    {bold}enter{/}   execute search
+
+`,
+
+            
+
+    style: {
+            fg: colorScheme.helpMessage.text.fg,
+            bg: colorScheme.helpMessage.text.bg,
+            border: {
+                fg: colorScheme.helpMessage.border.fg,
+                bg: colorScheme.helpMessage.border.bg
+            },
+            label: {
+                fg: colorScheme.helpMessage.label.fg,
+                bg: colorScheme.helpMessage.label.bg
+            },
+
+    }
+}
+
 export enum HistoryBoxState {
     Idle,
     ScrollingAll,
