@@ -4,7 +4,7 @@
   "description": "Pretty gdb UI.",
   "main": "main.js",
   "author": "Hassan Farooq",
-  "license": "MIT",
+  "license": "GPL2",
   "dependencies": {
     "@types/baconjs": "^0.7.31",
     "@types/blessed": "^0.1.4",
@@ -29,5 +29,15 @@
   "devDependencies": {
     "@types/jquery": "^2.0.41",
     "gdb-js": "github:typon/gdb-js"
-  }
+  },
+  "nexe": {
+      "input": "main.js",
+        "output": "gudb^$",
+        "temp": "tmp/nexe",
+        "runtime": {
+            "framework": "node",
+            "js-flags": "--use_strict",
+            "ignoreFlags": true
+        }
+    }
 }

@@ -82,6 +82,27 @@ class Widgets {
             tags: true,
             keys: true,
         });
+        this._stackBox = blessed.List({
+            name: 'stackBox',
+            label: 'Stack',
+            parent: this._layout,
+            scrollable: true,
+            style: cts.varBoxProps.style,
+            alwaysScroll: true,
+            scrollbar: {
+                ch: ' ',
+                inverse: true
+            },
+            border: {
+                type: 'line'
+            },
+            height: cts.varBoxProps.height,
+            width: cts.varBoxProps.width,
+            vi: true,
+            tags: true,
+            keys: true,
+            hidden: true,
+        });
         this._container = blessed.box({
             name: 'container',
             label: 'History',

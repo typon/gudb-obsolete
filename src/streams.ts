@@ -42,6 +42,9 @@ export class Streams extends utils.HasCallbacks {
     s_screen_keydown : Bacon.EventStream<any,any>;
     s_screen_key_cq : Bacon.EventStream<any,any>;
 
+    s_stackbox_keydown : Bacon.EventStream<any,any>;
+    s_varbox_keydown : Bacon.EventStream<any,any>;
+
     s_editor_key_B : Bacon.EventStream<any,any>;
     s_editor_key_N : Bacon.EventStream<any,any>;
     s_editor_key_S : Bacon.EventStream<any,any>;
@@ -99,7 +102,6 @@ export class Streams extends utils.HasCallbacks {
         // first one into the stream.
         this.s_screen_keydown = new Bacon.Bus()
         this.widgets._screen.on('keypress', _.partial(key_callback,this.s_screen_keydown))
-        this.s_screen_keydown.onValue(t=> lg.info('KEY: ' + t))
 
         this.s_ibox_submit = Bacon.fromEvent(this.widgets._inputBox, 'submit')
 
@@ -176,7 +178,9 @@ export class Streams extends utils.HasCallbacks {
         this.handle_focus()
         this.handle_variables()
         this.handle_variable_search()
+        this.handle_callstack()
         this.handle_menuBar()
+        this.handle_info_panel_switching()
         this.handle_helpMSG()
     }
     handle_resizing(){
@@ -560,82 +564,131 @@ export class Streams extends utils.HasCallbacks {
     }
     handle_variables(){
         let s_var_info = this.s_gdb_stopped.flatMap(_ignore_ => {
-            return Bacon.fromPromise(this.gdbObj.context())
-        }).map(context => this.process_variable_context(context))
-        s_var_info.onValue(varStrs => {
-            this.widgets._varBox.setItems(varStrs)
-            this.widgets._varBox.render()
-        })
+                return Bacon.fromPromise(this.gdbObj.context())
+            }).map(context => this.process_variable_context(context))
+            s_var_info.onValue(varStrs => {
+                this.widgets._varBox.setItems(varStrs)
+                this.widgets._varBox.render()
+            })
 
-    }
-    process_variable_context(context){
-        const locals = _.filter(context, (c: any) => c.scope == 'local')
-        const globals = _.filter(context, (c: any) => c.scope == 'global')
-
-        let localsStrs: string[] = locals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
-        let globalsStrs: string[] = globals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
-        localsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Locals`, localsStrs)
-        globalsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Globals`, globalsStrs)
-        const allStrs = _.concat(localsStrs, globalsStrs)
-        return allStrs
-
-        
-    }
-    handle_variable_search() {
-        let s_start_varsearch = new Bacon.Bus()
-        // Push each start search event (which is a func) into the bus
-        var_search = search_func => {
-            s_start_varsearch.push(search_func)
         }
-        this.widgets._varBox.options.search = var_search
+        process_variable_context(context){
+            const locals = _.filter(context, (c: any) => c.scope == 'local')
+            const globals = _.filter(context, (c: any) => c.scope == 'global')
 
-        let s_varbox_keydown = new Bacon.Bus()
-        this.widgets._varBox.on('keypress', _.partial(key_callback,s_varbox_keydown))
-        let s_varbox_reset = s_varbox_keydown.filter(key => key == 'return' || key == 'escape' || key == 'enter' || key == '/').map(1)
-        let s_varbox_text = s_varbox_keydown.filter(key => utils.is_alphanum(key))
+            let localsStrs: string[] = locals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
+            let globalsStrs: string[] = globals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
+            localsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Locals`, localsStrs)
+            globalsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}{${cts.colorScheme.varHeaderbg}}Globals`, globalsStrs)
+            const allStrs = _.concat(localsStrs, globalsStrs)
+            return allStrs
 
-        // Create property that holds the latest search string.
-        // It gets reset every time the user starts a new search
-        // or presses escape or presses enter.
-        this.p_varbox_search = Bacon.update(
-          ['', false], // Initial
-          [s_varbox_reset], function([srch, valid], reset) {
-              // Reset search valid
-              return [srch, true]
-          },
-          [s_varbox_text], function([srch, valid]: [string, boolean], k) {
-              // we just emitted a search, reset string
-              if (valid == true) srch = ''
-              srch = srch + k
-              return [srch, false]
-          },
+            
+        }
+        handle_variable_search() {
+            let s_start_varsearch = new Bacon.Bus()
+            // Push each start search event (which is a func) into the bus
+            var_search = search_func => {
+                s_start_varsearch.push(search_func)
+            }
+            this.widgets._varBox.options.search = var_search
 
-        ).filter(([srch, valid]) => valid == true)
-        .map(([srch, valid]) => {return srch})
+            this.s_varbox_keydown = new Bacon.Bus()
+            this.widgets._varBox.on('keypress', _.partial(key_callback,this.s_varbox_keydown))
 
-        s_start_varsearch.toProperty().sampledBy(this.p_varbox_search, (func: Function, srch: string) => {
-            func(srch)
-            return true
-        }).onValue(() => {})
-                
 
-    }
-    handle_menuBar() {
-        let s_program_status = Bacon.mergeAll(this.s_gdb_stopped.map('Stopped'),
-                                              this.s_gdb_running.map('Running'))
-                                .toProperty().startWith('Not started')
-        let s_menubar_updates = Bacon.combineAsArray(s_program_status, this.p_varbox_search).startWith(['Not started',''])
-                                .onValue(([statuz, srch]) => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz, srch)))
-        //s_menubar_updates.onValue(statuz => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz)))
-    }
-    handle_helpMSG() {
-        let s_screen_key_qm = this.s_screen_keydown.filter(key => key === '?')
-        this.widgets._helpMessage.hidden = true;
-        s_screen_key_qm.onValue(() => {
-            this.widgets._helpMessage.hidden = false;
-            this.widgets._helpMessage.display(cts.helpMessageProps.text, 0, ()=>{})
-        })
+            let s_varbox_reset = this.s_varbox_keydown.filter(key => key == 'return' || key == 'escape' || key == 'enter' || key == '/').map(1)
+            let s_varbox_text = this.s_varbox_keydown.filter(key => utils.is_alphanum(key))
 
-    }
+            // Create property that holds the latest search string.
+            // It gets reset every time the user starts a new search
+            // or presses escape or presses enter.
+            this.p_varbox_search = Bacon.update(
+              ['', false], // Initial
+              [s_varbox_reset], function([srch, valid], reset) {
+                  // Reset search valid
+                  return [srch, true]
+              },
+              [s_varbox_text], function([srch, valid]: [string, boolean], k) {
+                  // we just emitted a search, reset string
+                  if (valid == true) srch = ''
+                  srch = srch + k
+                  return [srch, false]
+              },
+
+            ).filter(([srch, valid]) => valid == true)
+            .map(([srch, valid]) => {return srch})
+
+            s_start_varsearch.toProperty().sampledBy(this.p_varbox_search, (func: Function, srch: string) => {
+                func(srch)
+                return true
+            }).onValue(() => {})
+                    
+
+        }
+        handle_callstack() {
+            this.s_stackbox_keydown = new Bacon.Bus()
+            this.widgets._stackBox.on('keypress', _.partial(key_callback,this.s_stackbox_keydown))
+
+                let s_callstack_info = this.s_gdb_stopped.flatMap(() => 
+                      {return Bacon.fromPromise(
+                          utils.exec_gdb_command(
+                            this.gdbObj, {cmdStr:'-stack-list-frames', state:CMDState.Final}))})
+                    .map(this.process_callstack)
+                    .onValue(stack=> {
+                                this.widgets._stackBox.setItems(stack)
+                                this.widgets._stackBox.render()
+                    })
+
+        }
+        process_callstack(result){
+            let stack = result.stack
+            let stackStr: string[] = stack.map(fr => 
+                    `{${cts.colorScheme.varName}}#${fr.value.level}{/}: ${fr.value.addr} in {bold}${fr.value.func}{/} at ${fr.value.file}:${fr.value.line}`)
+            return stackStr
+        }
+        handle_info_panel_switching() {
+            //s_varbox_keydown.onValue(t => lg.info("PRESSED: " + t))
+            let s_varbox_keydown_right = this.s_varbox_keydown.filter(key => key == 'right').map(1)
+            let s_stackbox_keydown_right = this.s_stackbox_keydown.filter(key => key == 'right').map(1)
+            enum CurrentInfoBox {varBox, stackBox};
+            let p_infobox_current = Bacon.update(
+              CurrentInfoBox.varBox, // Initial
+              [s_varbox_keydown_right], function(prev, varBoxToggle) {
+                  return CurrentInfoBox.stackBox
+              },
+              [s_stackbox_keydown_right], function(prev, stackBoxToggle) {
+                  return CurrentInfoBox.varBox
+              }
+            ).onValue(current => {
+                if (current == CurrentInfoBox.stackBox) {
+                    this.widgets._varBox.hidden = true
+                    this.widgets._stackBox.hidden = false
+                    this.widgets._stackBox.focus();
+                }
+                else if (current == CurrentInfoBox.varBox) {
+                    this.widgets._varBox.hidden = false
+                    this.widgets._stackBox.hidden = true
+                    this.widgets._varBox.focus();
+                }
+            })
+
+        }
+        handle_menuBar() {
+            let s_program_status = Bacon.mergeAll(this.s_gdb_stopped.map('Stopped'),
+                                                  this.s_gdb_running.map('Running'))
+                                    .toProperty().startWith('Not started')
+            let s_menubar_updates = Bacon.combineAsArray(s_program_status, this.p_varbox_search).startWith(['Not started',''])
+                                    .onValue(([statuz, srch]) => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz, srch)))
+        }
+        handle_helpMSG() {
+            let s_screen_key_qm = this.s_screen_keydown.filter(key => key === '?')
+            this.widgets._helpMessage.hidden = true;
+            s_screen_key_qm.onValue(() => {
+                this.widgets._helpMessage.hidden = false;
+                this.widgets._helpMessage.display(cts.helpMessageProps.text, 0, ()=>{})
+            })
+
+        }
 
 }

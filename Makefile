@@ -1,4 +1,9 @@
+.PHONY:
+	@echo "To launch program, please do make run"
 ts:
 	tsc -p tsconfig.json
 
-exe:
+install:
+	cd build
+	npm install
+

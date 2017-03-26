@@ -37,7 +37,6 @@ class Streams extends utils.HasCallbacks {
         this.s_gdb_notify = Bacon.fromEvent(this.gdbObj, 'notify');
         this.s_screen_keydown = new Bacon.Bus();
         this.widgets._screen.on('keypress', _.partial(key_callback, this.s_screen_keydown));
-        this.s_screen_keydown.onValue(t => main_1.logger.info('KEY: ' + t));
         this.s_ibox_submit = Bacon.fromEvent(this.widgets._inputBox, 'submit');
         this.s_ibox_keydown = new Bacon.Bus();
         this.widgets._inputBox.on('keypress', _.partial(key_callback, this.s_ibox_keydown));
@@ -97,7 +96,9 @@ class Streams extends utils.HasCallbacks {
         this.handle_focus();
         this.handle_variables();
         this.handle_variable_search();
+        this.handle_callstack();
         this.handle_menuBar();
+        this.handle_info_panel_switching();
         this.handle_helpMSG();
     }
     handle_resizing() {
@@ -394,10 +395,10 @@ class Streams extends utils.HasCallbacks {
             s_start_varsearch.push(search_func);
         };
         this.widgets._varBox.options.search = exports.var_search;
-        let s_varbox_keydown = new Bacon.Bus();
-        this.widgets._varBox.on('keypress', _.partial(key_callback, s_varbox_keydown));
-        let s_varbox_reset = s_varbox_keydown.filter(key => key == 'return' || key == 'escape' || key == 'enter' || key == '/').map(1);
-        let s_varbox_text = s_varbox_keydown.filter(key => utils.is_alphanum(key));
+        this.s_varbox_keydown = new Bacon.Bus();
+        this.widgets._varBox.on('keypress', _.partial(key_callback, this.s_varbox_keydown));
+        let s_varbox_reset = this.s_varbox_keydown.filter(key => key == 'return' || key == 'escape' || key == 'enter' || key == '/').map(1);
+        let s_varbox_text = this.s_varbox_keydown.filter(key => utils.is_alphanum(key));
         this.p_varbox_search = Bacon.update(['', false], [s_varbox_reset], function ([srch, valid], reset) {
             return [srch, true];
         }, [s_varbox_text], function ([srch, valid], k) {
@@ -411,6 +412,49 @@ class Streams extends utils.HasCallbacks {
             func(srch);
             return true;
         }).onValue(() => { });
+    }
+    handle_callstack() {
+        this.s_stackbox_keydown = new Bacon.Bus();
+        this.widgets._stackBox.on('keypress', _.partial(key_callback, this.s_stackbox_keydown));
+        let s_callstack_info = this.s_gdb_stopped.flatMap(() => {
+            return Bacon.fromPromise(utils.exec_gdb_command(this.gdbObj, { cmdStr: '-stack-list-frames', state: constants_1.CMDState.Final }));
+        })
+            .map(this.process_callstack)
+            .onValue(stack => {
+            this.widgets._stackBox.setItems(stack);
+            this.widgets._stackBox.render();
+        });
+    }
+    process_callstack(result) {
+        let stack = result.stack;
+        let stackStr = stack.map(fr => `{${cts.colorScheme.varName}}#${fr.value.level}{/}: ${fr.value.addr} in {bold}${fr.value.func}{/} at ${fr.value.file}:${fr.value.line}`);
+        return stackStr;
+    }
+    handle_info_panel_switching() {
+        let s_varbox_keydown_right = this.s_varbox_keydown.filter(key => key == 'right').map(1);
+        let s_stackbox_keydown_right = this.s_stackbox_keydown.filter(key => key == 'right').map(1);
+        var CurrentInfoBox;
+        (function (CurrentInfoBox) {
+            CurrentInfoBox[CurrentInfoBox["varBox"] = 0] = "varBox";
+            CurrentInfoBox[CurrentInfoBox["stackBox"] = 1] = "stackBox";
+        })(CurrentInfoBox || (CurrentInfoBox = {}));
+        ;
+        let p_infobox_current = Bacon.update(CurrentInfoBox.varBox, [s_varbox_keydown_right], function (prev, varBoxToggle) {
+            return CurrentInfoBox.stackBox;
+        }, [s_stackbox_keydown_right], function (prev, stackBoxToggle) {
+            return CurrentInfoBox.varBox;
+        }).onValue(current => {
+            if (current == CurrentInfoBox.stackBox) {
+                this.widgets._varBox.hidden = true;
+                this.widgets._stackBox.hidden = false;
+                this.widgets._stackBox.focus();
+            }
+            else if (current == CurrentInfoBox.varBox) {
+                this.widgets._varBox.hidden = false;
+                this.widgets._stackBox.hidden = true;
+                this.widgets._varBox.focus();
+            }
+        });
     }
     handle_menuBar() {
         let s_program_status = Bacon.mergeAll(this.s_gdb_stopped.map('Stopped'), this.s_gdb_running.map('Running'))

@@ -20,6 +20,7 @@ export class Widgets {
     _container;
     _outputBox;
     _varBox;
+    _stackBox;
     _inputBox;
     _hbox_inbox_divider;
     _historyBox;
@@ -107,6 +108,28 @@ export class Widgets {
             tags: true,
             keys: true,
         });
+        this._stackBox = blessed.List({
+            name: 'stackBox', 
+            label: 'Stack',
+            parent: this._layout,
+            scrollable: true,
+            style: cts.varBoxProps.style,
+            alwaysScroll: true,
+            scrollbar: {
+                ch: ' ',
+                inverse: true
+            },
+            border: {
+                type: 'line'
+            },
+            height: cts.varBoxProps.height,
+            width: cts.varBoxProps.width,
+            vi: true,
+            tags: true,
+            keys: true,
+            hidden: true,
+        });
+
         // Widget collection which forms the Command panel.
         this._container = blessed.box({
             name: 'container', 

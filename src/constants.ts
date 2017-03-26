@@ -374,9 +374,10 @@ When focused on source panel, use the following buttons for convenient gdb comma
     {bold}r{/}       run
     {bold}b{/}       create/delete breakpoint at current line
 
-When focused on variable window:
+When focused on variable panel:
     {bold}/{/}       start searching for variable name
     {bold}enter{/}   execute search
+    {bold}->{/}      Toggle to next info panel
 
 `,
 
