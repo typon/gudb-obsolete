@@ -4,7 +4,7 @@
   "description": "Pretty gdb UI.",
   "main": "main.js",
   "author": "Hassan Farooq",
-  "license": "GPL2",
+  "license": "GPL3",
   "dependencies": {
     "@types/baconjs": "^0.7.31",
     "@types/blessed": "^0.1.4",

@@ -1,8 +1,9 @@
 gudb
 =====
-Author: Hassan Farooq
+Welcome to gudb, a prettier gdb interface. 
 
-Welcome to gudb, the pretty gdb interface. Inspired by pudb, the awesome python debugger.
+
+(Inspired by pudb, the awesome python debugger.)
 
 Requirements
 ======
@@ -14,7 +15,8 @@ Requirements
 Usage
 ======
 
-    cd build
+    git clone https://github.com/typon/gudb 
+    cd gudb/build
     npm install
     node main.js <path to program executable>
 
