@@ -12,6 +12,10 @@ import { logger as lg} from "./main";
 
 export class Widgets {
     _screen;
+    _layout;
+    _menuBar;
+    _menuText;
+    _menuStatus;
     _editor;
     _container;
     _outputBox;
@@ -20,24 +24,81 @@ export class Widgets {
     _hbox_inbox_divider;
     _historyBox;
     _errorMessage;
-    gdbObj: GDB;
     _hboxState;
-
-    constructor(gdbObj) {
-        this.gdbObj = gdbObj
+    _menuStatusTemplate;
+    constructor() {
         this._screen = blessed.screen({
             debug: false,
-            log: './logf',
             autoPadding: true,
             fullUnicode: true,
             dockBorders: true,
-            warnings: true
+            warnings: true,
         });
+        this._layout = blessed.layout({
+            parent: this._screen,
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            style: cts.screenProps.style,
+          /*
+          style: {
+            bg: 'red',
+            border: {
+              fg: 'blue'
+            }
+          }
+          */
+        })
+        this._menuBar = blessed.box({
+            parent: this._layout,
+            top: 0,
+            left: 0,
+            //top:cts.menuBarProps.top,
+            //left: cts.menuBarProps.left,
+            width: cts.menuBarProps.width,
+            height: cts.menuBarProps.height,
+            //content: this._menuBarTemplate('Not started'),
+            //content: '{center}asd{/center}{bold}ree{/}{/} {center} AA{/center}',
+            style: cts.menuBarProps.style
+        })
+        this._menuText = blessed.text({
+            parent: this._menuBar,
+            tags: true,
+            left: cts.menuTextProps.left,
+            //top:cts.menuBarProps.top,
+            //left: cts.menuBarProps.left,
+            //height: cts.menuBarProps.height,
+            //content: this._menuBarTemplate('Not started'),
+            //content: '{center}asd{/center}{bold}ree{/}{/} {center} AA{/center}',
+            content: cts.menuTextProps.content,
+            style: cts.menuTextProps.style
+        })
+
+        this._menuStatusTemplate = statuz => `{bold}Status: ${statuz}{/}`
+        this._menuStatus = blessed.text({
+            parent: this._menuBar,
+            tags: true,
+            right: cts.menuStatusProps.right,
+            //content: '{bold}asd{/}',
+            //top:cts.menuBarProps.top,
+            //left: cts.menuBarProps.left,
+            //width: cts.menuBarProps.width,
+            //height: cts.menuBarProps.height,
+            content: this._menuStatusTemplate('Not started'),
+            style: cts.menuStatusProps.style
+        })
+
+        /*
+        this._menuBar.add("REE", () => {})
+        this._menuBar.add("NUTS", () => {})
+        //*/
+
         this._editor = new Editor({
             // normal blessed widget, use like you would any other blessed element
-            parent: this._screen,
-            top: cts.editorProps.top,
-            left: cts.editorProps.left,
+            parent: this._layout,
+            //top: cts.editorProps.top,
+            //left: cts.editorProps.left,
             width: cts.editorProps.width,
             height: cts.editorProps.height,
             label: 'Source',
@@ -45,15 +106,16 @@ export class Widgets {
                 type: 'line'
             },
             style: cts.editorProps.style,
+            tags: true,
 
         });
-        this._editor.options.style['markedRow'] = `{${cts.breakPointLineColor}}`
+        this._editor.options.style['markedRow'] = `{${cts.colorScheme.breakPointLine}}`
         this._editor.readOnly(true);
 
         this._varBox = blessed.List({
             name: 'varBox', 
             label: 'Variables',
-            parent: this._screen,
+            parent: this._layout,
             scrollable: true,
             // Possibly support:
             // align: 'center',
@@ -68,40 +130,17 @@ export class Widgets {
             },
             height: cts.varBoxProps.height,
             width: cts.varBoxProps.width,
-            left: cts.varBoxProps.left,
-            top: cts.varBoxProps.top,
+            //left: cts.varBoxProps.left,
+            //top: cts.varBoxProps.top,
             vi: true,
             tags: true,
-            keys: true,
-        });
-        this._outputBox = blessed.log({
-            name: 'outputBox', 
-            label: 'Program output',
-            parent: this._screen,
-            scrollable: true,
-            // Possibly support:
-            // align: 'center',
-            style: cts.outputBoxProps.style,
-            alwaysScroll: true,
-            scrollbar: {
-                ch: ' ',
-                inverse: true
-            },
-            border: {
-                type: 'line'
-            },
-            height: cts.outputBoxProps.height,
-            width: cts.outputBoxProps.width,
-            left: cts.outputBoxProps.left,
-            top: cts.outputBoxProps.top,
-            vi: true,
             keys: true,
         });
         // Widget collection which forms the Command panel.
         this._container = blessed.box({
             name: 'container', 
             label: 'History', 
-            parent: this._screen,
+            parent: this._layout,
             scrollable: true,
             border: {
                 type: 'line'
@@ -111,8 +150,8 @@ export class Widgets {
             height: cts.CommandPanelProps.height,
             width: cts.CommandPanelProps.width,
         
-            top: cts.CommandPanelProps.top,
-            left: '0%',
+            //top: cts.CommandPanelProps.top,
+            //left: '0%',
         
             alwaysScroll: true,
             scrollbar: {
@@ -142,8 +181,32 @@ export class Widgets {
         
         this._hbox_inbox_divider = blessed.line({
             parent: this._container,
+            style: cts.dividerProps.style,
             orientation: 'horizontal',
             bottom: 1
+        });
+        this._outputBox = blessed.log({
+            name: 'outputBox', 
+            label: 'Program output',
+            parent: this._layout,
+            scrollable: true,
+            // Possibly support:
+            // align: 'center',
+            style: cts.outputBoxProps.style,
+            alwaysScroll: true,
+            scrollbar: {
+                ch: ' ',
+                inverse: true
+            },
+            border: {
+                type: 'line'
+            },
+            height: cts.outputBoxProps.height,
+            width: cts.outputBoxProps.width,
+            //left: cts.outputBoxProps.left,
+            //top: cts.outputBoxProps.top,
+            vi: true,
+            keys: true,
         });
         
         this._inputBox = blessed.Textbox({
@@ -161,7 +224,7 @@ export class Widgets {
         });
         
         this._errorMessage = blessed.message({
-            parent: this._screen,
+            parent: this._layout,
             border: 'line',
             height: 'shrink',
             width: 'half',

@@ -2,7 +2,6 @@ const util = require('util');
 const blessed = require('blessed');
 import * as _ from "lodash";
 import { GDB } from 'gdb-js'
-//import 'Bacon';
 import { AutoComplete} from "./match";
 import * as cts from "./constants";
 import {CMDState as CMDState} from "./constants";
@@ -27,6 +26,7 @@ export class Streams extends utils.HasCallbacks {
     s_gdb_log_out: Bacon.EventStream<any,any>;
     s_gdb_console_out: Bacon.EventStream<any,any>;
     s_gdb_stopped: Bacon.EventStream<any,any>;
+    s_gdb_running: Bacon.EventStream<any,any>;
     s_gdb_notify: Bacon.EventStream<any,any>;
     s_gdb_bpoints: Bacon.EventStream<any,any>;
     s_source_info: Bacon.EventStream<any,any>;
@@ -73,7 +73,8 @@ export class Streams extends utils.HasCallbacks {
     gdbObj: GDB;
     widgets: Widgets;
     ac: AutoComplete;
-    constructor(gdb, widgets) {
+    term;
+    constructor(gdb, widgets, term) {
         super();
 
         this.widgets = widgets;
@@ -82,8 +83,9 @@ export class Streams extends utils.HasCallbacks {
 
         this.s_gdb_log_out = Bacon.fromEvent(this.gdbObj.logStream, "data");
         this.s_gdb_console_out = Bacon.fromEvent(this.gdbObj.consoleStream, "data");
-        this.s_gdb_program_out = Bacon.fromEvent(main.term, "data");
+        this.s_gdb_program_out = Bacon.fromEvent(term, "data");
         this.s_gdb_stopped = Bacon.fromEvent(this.gdbObj, 'stopped');
+        this.s_gdb_running = Bacon.fromEvent(this.gdbObj, 'running');
         this.s_gdb_notify = Bacon.fromEvent(this.gdbObj, 'notify');
 
         // TODO: Figure out whether this is a hack or not.
@@ -144,7 +146,7 @@ export class Streams extends utils.HasCallbacks {
             this.widgets._inputBox.readInput(function() {});
         })
         this.b_quit.onValue(_ignore_ => {
-            main.gdbChildProcess.kill();
+            this.gdbObj._process.kill()
             process.exit(0)
         })
         s_screen_key_cl.onValue(_ignore_ => {
@@ -171,6 +173,7 @@ export class Streams extends utils.HasCallbacks {
         this.handle_focus()
         this.handle_variables()
         this.handle_variable_search()
+        this.handle_menuBar()
     }
     handle_resizing(){
 
@@ -233,9 +236,9 @@ export class Streams extends utils.HasCallbacks {
                                 .doAction(cmd => lg.info('before str: ' +util.inspect( cmd)))
                                 .map(cmd  => {
                                     if (cmd.state == CMDState.Final) {
-                                        return {tag:cts.commandTextColor, cmd:cmd.cmdStr}
+                                        return {tag:cts.colorScheme.commandText, cmd:cmd.cmdStr}
                                     } else if (cmd.state == CMDState.Int) {
-                                        return {tag:cts.commandIntColor, cmd:cmd.cmdStr}
+                                        return {tag:cts.colorScheme.commandInt, cmd:cmd.cmdStr}
                                     }
 
                                 })
@@ -260,7 +263,7 @@ export class Streams extends utils.HasCallbacks {
                                                 let cast = err.toString()
                                                 lg.info('Errrr: ' + cast)
                                                 let filteredErr = cast.match(/GDBError: Error while .*?[".] (.*)/)[1]
-                                                filteredErr = `{${cts.resultErrorColor}}${filteredErr}{/}`
+                                                filteredErr = `{${cts.colorScheme.resultError}}${filteredErr}{/}`
                                                 return new Bacon.Next(filteredErr)
                                             })
 
@@ -419,7 +422,7 @@ export class Streams extends utils.HasCallbacks {
                                         if (log === result) {
                                             return ''
                                         } else {
-                                            log =`{${cts.resultErrorColor}}${log}{/}` 
+                                            log =`{${cts.colorScheme.resultError}}${log}{/}` 
                                             return log
                                         }
                                     }).filter(_.negate(_.isEmpty))
@@ -432,7 +435,7 @@ export class Streams extends utils.HasCallbacks {
 
         let p_hbox_all_lines = this.s_user_cmd_str_tagged
                                         .merge(
-                                            s_hbox_result_lines.map(text => `{${cts.resultTextColor}}${text}{/}`)
+                                            s_hbox_result_lines.map(text => `{${cts.colorScheme.resultText}}${text}{/}`)
                                         )
                                 .map(_.trim)
                                 .onValue(text => this.widgets._historyBox.insertBottom(text))
@@ -555,17 +558,20 @@ export class Streams extends utils.HasCallbacks {
         let s_var_info = this.s_gdb_stopped.flatMap(_ignore_ => {
             return Bacon.fromPromise(this.gdbObj.context())
         }).map(context => this.process_variable_context(context))
-        s_var_info.onValue(varStrs => this.widgets._varBox.setItems(varStrs))
+        s_var_info.onValue(varStrs => {
+            this.widgets._varBox.setItems(varStrs)
+            this.widgets._varBox.render()
+        })
 
     }
     process_variable_context(context){
         const locals = _.filter(context, (c: any) => c.scope == 'local')
         const globals = _.filter(context, (c: any) => c.scope == 'global')
 
-        let localsStrs: string[] = locals.map(vr => `{${cts.varNameColor}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
-        let globalsStrs: string[] = globals.map(vr => `{${cts.varNameColor}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
-        localsStrs = _.concat('Locals', localsStrs)
-        globalsStrs = _.concat('Globals', globalsStrs)
+        let localsStrs: string[] = locals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
+        let globalsStrs: string[] = globals.map(vr => `{${cts.colorScheme.varName}}${vr.name}{/}: {bold}${vr.value}{/} <${vr.type}>`)
+        localsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}Locals`, localsStrs)
+        globalsStrs = _.concat(`{${cts.colorScheme.varHeader}}{bold}Globals`, globalsStrs)
         const allStrs = _.concat(localsStrs, globalsStrs)
         return allStrs
 
@@ -610,6 +616,16 @@ export class Streams extends utils.HasCallbacks {
                 
 
     }
-
+    handle_menuBar() {
+        let s_program_status = Bacon.mergeAll(this.s_gdb_stopped.map('Stopped'),
+                                              this.s_gdb_running.map('Running'))
+                                .toProperty().startWith('Not started')
+        
+        s_program_status.onValue(statuz => this.widgets._menuStatus.setContent(this.widgets._menuStatusTemplate(statuz)))
+        //this.widgets._menuBar.setContent('\n{center}asdasdjddsadsakj jksad jksa dsajk adsjk dasjksad kjdsakjd aksj kjadskjd{/}\n')
+        //this.widgets._menuBar.setContent('hello {right}{#ff0000-fg}{#00ff00-bg}world{/}')
+        //this.widgets._menuStatus.setContent('{bold}world{/}');
+        //this.widgets._menuBar.setContent('{right}Even different {black-fg}content{/black-fg}.{/right}', false, false);
+        //s_program_status.onValue(statuz => this.widgets._menuBar.setContent('\n{center}asdasdjddsadsakj jksad jksa dsajk adsjk dasjksad kjdsakjd aksj kjadskjd{/}\n'))
+    }
 }
-

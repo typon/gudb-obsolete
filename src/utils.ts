@@ -1,21 +1,12 @@
 const util = require('util');
 import * as _ from "lodash";
-
-import { gdb } from "./main";
 import * as cts from "./constants";
-const Autocomplete = require('Autocomplete');
 import { logger as lg} from "./main";
 import {CMDState as CMDState} from "./constants";
 
 export function empty_or_template(obj, tmpl){
     const result: string = _.isEmpty(obj) ? '' : tmpl(obj);
     return result
-}
-export function update_command_widget_sizes(CommandPanelWidgets) {
-
-    let [container, historyBox, inputBox] = CommandPanelWidgets;
-    const containerHeight = container.height;
-    historyBox.height = containerHeight - cts.CommandPanelProps.inputBoxProps.height - 1;
 }
 export function contains(arr: any[], item) {
     return arr.indexOf(item) > -1
@@ -30,26 +21,6 @@ export function is_mi_cmd (cmd: string): boolean {
     return (cmd in cts.multiCmds)
 
 }
-/*
-export function map_to_mi_cmd(cmd) {
-    let resultCMD: string;
-    //let cmdType: cts.Command = cts.Command.CLI
-
-    lg.info('In map_to_mi_cmd: ' + util.inspect(cmd))
-    //const cmdFirst = _.trim(_.first(_.split(cmd[2], ' ', 1)))
-    
-    if (cmd.state == CMDState.Int) {
-        //const miCMD = cts.multiCmds[cmdName]
-        resultCMD = _.trim(`${miCMD} ${cmdRest}`)
-    } else {
-        resultCMD = cmdNameAndRest
-    }
-    lg.info('Ending map_to_mi_cmd: ' + resultCMD)
-    return resultCMD
-}
-*/
-
-
 
 export function nth_clamped(arr: any[], n: number) {
     let item;

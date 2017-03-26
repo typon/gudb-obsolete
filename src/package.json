@@ -11,6 +11,7 @@
   "dependencies": {
     "@types/baconjs": "^0.7.31",
     "@types/blessed": "^0.1.4",
+    "@types/jquery": "^2.0.41",
     "@types/lodash": "^4.14.53",
     "@types/winston": "^2.2.0",
     "autocomplete": "0.0.1",
@@ -28,6 +29,7 @@
     "winston": "^2.3.1"
   },
   "devDependencies": {
+    "@types/jquery": "^2.0.41",
     "gdb-js": "github:typon/gdb-js"
   }
 }
