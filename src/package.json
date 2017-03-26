@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Pretty gdb UI.",
   "main": "main.js",
-  "scripts": {
-    "test": "make test"
-  },
   "author": "Hassan Farooq",
   "license": "MIT",
   "dependencies": {
@@ -20,7 +17,7 @@
     "blessed": "^0.1.81",
     "child-process": "^1.0.2",
     "commander": "^2.9.0",
-    "editor-widget": "https://github.com/typon/editor-widget/tarball/master",
+    "editor-widget": "github:typon/editor-widget",
     "gdb-js": "github:typon/gdb-js",
     "lodash": "^4.17.4",
     "pty": "0.0.0",

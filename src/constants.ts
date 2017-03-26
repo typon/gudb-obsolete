@@ -364,7 +364,7 @@ export const helpMessageProps = {
 
     {bold}C-x{/}     Focus on gdb command panel
     {bold}C-s{/}     Focus on source panel          
-    {bold}C-v{/}     Focus on variables panel       
+    {bold}C-p{/}     Focus on variables panel       
     {bold}C-o{/}     Focus on program output panel  
     {bold}C-l{/}     Focus on history log           
 

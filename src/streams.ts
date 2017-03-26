@@ -132,7 +132,7 @@ export class Streams extends utils.HasCallbacks {
         let s_screen_key_cl = this.s_screen_keydown.filter(key => key === 'C-l')
         this.s_screen_key_cq = this.s_screen_keydown.filter(key => key === 'C-q')
         let s_screen_key_co = this.s_screen_keydown.filter(key => key === 'C-o')
-        let s_screen_key_cv = this.s_screen_keydown.filter(key => key === 'C-v')
+        let s_screen_key_cp = this.s_screen_keydown.filter(key => key === 'C-p')
 
         this.s_editor_key_B = this.s_editor_keydown.filter(key => key === 'b')
         this.s_editor_key_N = this.s_editor_keydown.filter(key => key === 'n')
@@ -161,7 +161,7 @@ export class Streams extends utils.HasCallbacks {
         s_screen_key_co.onValue(_ignore_ => {
             this.widgets._outputBox.focus();
         })
-        s_screen_key_cv.onValue(_ignore_ => {
+        s_screen_key_cp.onValue(_ignore_ => {
             this.widgets._varBox.focus();
         })
 
