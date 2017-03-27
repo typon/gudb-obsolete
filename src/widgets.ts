@@ -237,6 +237,7 @@ export class Widgets {
     }
 
     set_cursor_row(lineNo: number) {
+        this._editor.selection.clearTail()
         this._editor.selection.setHeadPosition(new Point(lineNo, 0));
     }
     update_editor_row(info: utils.CurrentLineInfo) {

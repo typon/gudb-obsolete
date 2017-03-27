@@ -376,8 +376,9 @@ When focused on source panel, use the following buttons for convenient gdb comma
 
 When focused on variable panel:
     {bold}/{/}       start searching for variable name
-    {bold}enter{/}   execute search
-    {bold}->{/}      Toggle to next info panel
+    {bold}↵ {/}      execute search
+    {bold}⬅/➡{/}     toggle to next info panel
+
 
 `,
 
