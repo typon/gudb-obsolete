@@ -649,15 +649,15 @@ export class Streams extends utils.HasCallbacks {
         }
         handle_info_panel_switching() {
             //s_varbox_keydown.onValue(t => lg.info("PRESSED: " + t))
-            let s_varbox_keydown_right = this.s_varbox_keydown.filter(key => key == 'right').map(1)
-            let s_stackbox_keydown_right = this.s_stackbox_keydown.filter(key => key == 'right').map(1)
+            let s_varbox_keydown_switch = this.s_varbox_keydown.filter(key => key == 'right' || key == 'left').map(1)
+            let s_stackbox_keydown_switch = this.s_stackbox_keydown.filter(key => key == 'right' || key == 'left').map(1)
             enum CurrentInfoBox {varBox, stackBox};
             let p_infobox_current = Bacon.update(
               CurrentInfoBox.varBox, // Initial
-              [s_varbox_keydown_right], function(prev, varBoxToggle) {
+              [s_varbox_keydown_switch], function(prev, varBoxToggle) {
                   return CurrentInfoBox.stackBox
               },
-              [s_stackbox_keydown_right], function(prev, stackBoxToggle) {
+              [s_stackbox_keydown_switch], function(prev, stackBoxToggle) {
                   return CurrentInfoBox.varBox
               }
             ).onValue(current => {

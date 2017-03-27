@@ -431,17 +431,17 @@ class Streams extends utils.HasCallbacks {
         return stackStr;
     }
     handle_info_panel_switching() {
-        let s_varbox_keydown_right = this.s_varbox_keydown.filter(key => key == 'right').map(1);
-        let s_stackbox_keydown_right = this.s_stackbox_keydown.filter(key => key == 'right').map(1);
+        let s_varbox_keydown_switch = this.s_varbox_keydown.filter(key => key == 'right' || key == 'left').map(1);
+        let s_stackbox_keydown_switch = this.s_stackbox_keydown.filter(key => key == 'right' || key == 'left').map(1);
         var CurrentInfoBox;
         (function (CurrentInfoBox) {
             CurrentInfoBox[CurrentInfoBox["varBox"] = 0] = "varBox";
             CurrentInfoBox[CurrentInfoBox["stackBox"] = 1] = "stackBox";
         })(CurrentInfoBox || (CurrentInfoBox = {}));
         ;
-        let p_infobox_current = Bacon.update(CurrentInfoBox.varBox, [s_varbox_keydown_right], function (prev, varBoxToggle) {
+        let p_infobox_current = Bacon.update(CurrentInfoBox.varBox, [s_varbox_keydown_switch], function (prev, varBoxToggle) {
             return CurrentInfoBox.stackBox;
-        }, [s_stackbox_keydown_right], function (prev, stackBoxToggle) {
+        }, [s_stackbox_keydown_switch], function (prev, stackBoxToggle) {
             return CurrentInfoBox.varBox;
         }).onValue(current => {
             if (current == CurrentInfoBox.stackBox) {

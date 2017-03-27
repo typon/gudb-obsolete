@@ -19,9 +19,7 @@ const winston = require("winston");
 const streams_1 = require("./streams");
 const spawn = require('child_process').spawn;
 exports.logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.File)({ filename: 'debug.log', timestamp: false })
-    ]
+    transports: []
 });
 exports.logger.log('info', 'Instantiating main objects...');
 function main(path) {
@@ -36,7 +34,16 @@ function main(path) {
         const termFD = term.pty;
         const gdbChildProcess = spawn('gdb', ['-i=mi', path, `--tty=${termFD}`]);
         let gdb = new gdb_js_1.GDB(gdbChildProcess);
-        yield gdb.init();
+        try {
+            yield gdb.init();
+        }
+        catch (err) {
+            console.log('Please ensure you gdb >= v7.3 installed');
+            console.log('Please ensure you have "set startup-with-shell off" in your ~/.gdbinit if using macOS Sierra');
+            console.log('Please ensure you have python >= 2.7 or python3 installed');
+            console.log('Please ensure you done "pip install future" if using python2');
+            process.exit(1);
+        }
         let widgetsObj = new widgets_1.Widgets();
         let streamsObj = new streams_1.Streams(gdb, widgetsObj, term);
         streamsObj.subscribe_to_streams();

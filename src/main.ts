@@ -16,7 +16,6 @@ const spawn = require('child_process').spawn;
 ////////////////////////////
 export let logger = new (winston.Logger)({
 transports: [
-new (winston.transports.File)({ filename: 'debug.log', timestamp: false})
 ]
 });
 logger.log('info', 'Instantiating main objects...');
@@ -40,7 +39,15 @@ async function main (path) {
     // Initialize gdb child process and gdb-js object.
     const gdbChildProcess = spawn('gdb', ['-i=mi', path, `--tty=${termFD}`]);
     let gdb = new GDB(gdbChildProcess);
-    await gdb.init();
+    try {
+        await gdb.init();
+    } catch (err) {
+        console.log('Please ensure you gdb >= v7.3 installed')
+        console.log('Please ensure you have "set startup-with-shell off" in your ~/.gdbinit if using macOS Sierra')
+        console.log('Please ensure you have python >= 2.7 or python3 installed')
+        console.log('Please ensure you done "pip install future" if using python2')
+        process.exit(1);
+    }
 
     // Render main screen
     let widgetsObj = new Widgets();

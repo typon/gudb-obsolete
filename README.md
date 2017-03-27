@@ -11,6 +11,10 @@ Requirements
 1. node.js
 2. npm
 3. gdb (> v7.3)
+4. 
+    python (>= v2.7, pip install future)
+    or
+    python (>= 3)
 
 Usage
 ======
