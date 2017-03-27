@@ -12,9 +12,9 @@ Requirements
 2. npm
 3. gdb (> v7.3)
 4. 
-    python (>= v2.7, pip install future)
+    python2 (>= v2.7, pip install future)
     or
-    python (>= 3)
+    python3 (>= 3.0)
 
 Usage
 ======
